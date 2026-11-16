@@ -63,7 +63,7 @@ The platform is designed for a dual audience:
 ## 🖥️ Live Preview
 
 <div align="center">
-  <img src="preview.png" alt="VeriClaim AI — Dashboard" width="900"/>
+  <img src="preview-result.png" alt="VeriClaim AI — Dashboard" width="900"/>
   <br/>
   <em>Real-time multimodal hoax detection — paste news text / WhatsApp broadcast, or upload a screenshot or PDF.</em>
 </div>
