@@ -102,13 +102,14 @@ The platform is designed for a dual audience:
 | **HuggingFace Transformers** | Model loading & local inference runtime |
 | **Sentence-Transformers** | Bi-Encoder embeddings (retrieval) + Cross-Encoder (reranking) |
 
-### Data & Knowledge Base
-| Technology | Role |
-|------------|------|
+### 📊 Data & Knowledge Base
+| Technology | Metric / Coverage |
+|------------|-------------------|
 | **Supabase (PostgreSQL)** | Managed Postgres datastore |
 | **pgvector** | Vector similarity search via cosine distance |
-| **TurnBackHoax Corpus** | 1,500+ pre-ingested, pre-verified fact-check chunks |
-| **DuckDuckGo Search** | Live web-search fallback for novel/breaking claims |
+| **TurnBackHoax Corpus** | **6,400+ curated fact-check chunks** (Verified Archive) |
+| **Two-Stage Reranking** | Cross-Encoder (`ms-marco-MiniLM-L-6-v2`) reranking |
+| **DuckDuckGo Search** | Live web-search fallback for novel claims |
 
 ### Frontend
 | Technology | Role |
