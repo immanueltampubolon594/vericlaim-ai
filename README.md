@@ -121,74 +121,11 @@ The platform is designed for a dual audience:
 
 VeriClaim AI follows a **decoupled three-tier architecture** — a presentation tier (Next.js), an application/intelligence tier (FastAPI + RAG pipeline), and a data tier (Supabase/pgvector + live web). The intelligence tier is itself internally layered into *ingestion*, *decomposition*, *retrieval*, and *reasoning* stages, each independently testable and replaceable.
 
-```mermaid
-graph TB
-    subgraph ING["① &nbsp; INGESTION LAYER &nbsp; · &nbsp; multimodal normalization"]
-        direction LR
-        T["<b>Raw Text</b><br/><i>claim / headline</i>"]
-        I["<b>Screenshot</b><br/><i>EasyOCR · local</i>"]
-        P["<b>PDF Circular</b><br/><i>PyPDF</i>"]
-    end
+<div align="center">
+  <img src="docs/arch_diagram.png" alt="VeriClaim AI — System Architecture" width="920"/>
+</div>
 
-    subgraph DEC["② &nbsp; CLAIM DECOMPOSITION ENGINE &nbsp; · &nbsp; decomposer.py"]
-        direction LR
-        NORM["<b>Normalizer</b><br/><i>canonical text</i>"]
-        LLM1["<b>Groq · gpt-oss-20b</b><br/><i>LLM decompose</i>"]
-        SUB["<b>Atomic Sub-Claims</b><br/><i>Pydantic v2 schema</i>"]
-        NORM --> LLM1 --> SUB
-    end
-
-    subgraph RET["③ &nbsp; TWO-STAGE RETRIEVAL ENGINE &nbsp; · &nbsp; verifier.py"]
-        direction LR
-        BI["<b>Bi-Encoder</b><br/><i>pgvector · cosine recall</i>"]
-        CR["<b>Cross-Encoder</b><br/><i>ms-marco-MiniLM-L-6-v2</i>"]
-        FB["<b>DuckDuckGo</b><br/><i>live web fallback</i>"]
-        BI --> CR
-        CR -. weak evidence .-> FB
-    end
-
-    subgraph VER["④ &nbsp; VERDICT & SCORING ENGINE &nbsp; · &nbsp; evidence-grounded reasoning"]
-        direction LR
-        MATCH["<b>Evidence Matcher</b><br/><i>claim ↔ evidence</i>"]
-        LLM2["<b>Groq · gpt-oss-120b</b><br/><i>deep reasoning</i>"]
-        OUT["<b>Structured Verdict</b><br/><i>BENAR · MENYESATKAN · HOAX</i>"]
-        MATCH --> LLM2 --> OUT
-    end
-
-    subgraph API["⑤ &nbsp; FASTAPI SERVICE LAYER"]
-        direction LR
-        E1["<b>/verify</b><br/><i>run pipeline</i>"]
-        E2["<b>/ingest</b><br/><i>OCR · PDF intake</i>"]
-        E3["<b>/report</b><br/><i>ReportLab PDF</i>"]
-    end
-
-    subgraph FE["⑥ &nbsp; NEXT.JS COMMAND CENTER &nbsp; · &nbsp; Cyber-Tech Dark Theme"]
-        direction LR
-        UI["<b>Multimodal Input</b><br/><i>text · image · PDF</i>"]
-        RES["<b>Verdict Render</b><br/><i>tactics · tips · citations</i>"]
-        EXP["<b>PDF Export</b><br/><i>investigation report</i>"]
-    end
-
-    KB[("<b>Supabase · pgvector</b><br/><i>1,500+ TurnBackHoax chunks</i>")]
-
-    ING --> DEC --> RET --> VER --> API --> FE
-    KB -. embeddings .-> RET
-
-    classDef ingest fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
-    classDef decomp fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
-    classDef retr   fill:#cffafe,stroke:#0891b2,color:#164e63
-    classDef verd   fill:#ffedd5,stroke:#ea580c,color:#7c2d12
-    classDef apie   fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
-    classDef front  fill:#dcfce7,stroke:#16a34a,color:#14532d
-    classDef store  fill:#fef9c3,stroke:#ca8a04,color:#713f12
-    class T,I,P ingest
-    class NORM,LLM1,SUB decomp
-    class BI,CR,FB retr
-    class MATCH,LLM2,OUT verd
-    class E1,E2,E3 apie
-    class UI,RES,EXP front
-    class KB store
-```
+> 📐 Diagram source is editable in [draw.io / diagrams.net](https://app.diagrams.net) — open `docs/vericlaim-architecture.drawio` to modify layers or re-export the PNG.
 
 ---
 
