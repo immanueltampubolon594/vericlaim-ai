@@ -122,7 +122,7 @@ The platform is designed for a dual audience:
 VeriClaim AI follows a **decoupled three-tier architecture** — a presentation tier (Next.js), an application/intelligence tier (FastAPI + RAG pipeline), and a data tier (Supabase/pgvector + live web). The intelligence tier is itself internally layered into *ingestion*, *decomposition*, *retrieval*, and *reasoning* stages, each independently testable and replaceable.
 
 <div align="center">
-  <img src="docs/arch_diagram.png" alt="VeriClaim AI — System Architecture" width="920"/>
+  <img src="arch_diagram.png" alt="VeriClaim AI — System Architecture" width="920"/>
 </div>
 
 > 📐 Diagram source is editable in [draw.io / diagrams.net](https://app.diagrams.net) — open `docs/vericlaim-architecture.drawio` to modify layers or re-export the PNG.
