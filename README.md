@@ -123,52 +123,71 @@ VeriClaim AI follows a **decoupled three-tier architecture** — a presentation 
 
 ```mermaid
 graph TB
-    subgraph CLIENT["🖥️ Presentation Tier — Next.js"]
-        UI["Cyber-Tech Dark UI<br/>App Router · TypeScript · Tailwind"]
-        INPUT["Multimodal Input<br/>Text · Image · PDF"]
-        REPORT["Live Verdict Render<br/>+ PDF Export Trigger"]
+    subgraph ING["① &nbsp; INGESTION LAYER &nbsp; · &nbsp; multimodal normalization"]
+        direction LR
+        T["<b>Raw Text</b><br/><i>claim / headline</i>"]
+        I["<b>Screenshot</b><br/><i>EasyOCR · local</i>"]
+        P["<b>PDF Circular</b><br/><i>PyPDF</i>"]
     end
 
-    subgraph API["⚙️ Application & Intelligence Tier — FastAPI"]
-        GATE["API Gateway<br/>Uvicorn · Pydantic v2 Validation"]
-        OCR["Ingestion Service<br/>EasyOCR · PyPDF"]
-        DECOMP["Claim Decomposer<br/>decomposer.py"]
-        VERIFY["Verification Engine<br/>verifier.py"]
-        VERDICT["Verdict & Scoring Engine"]
-        PDF["Report Exporter<br/>ReportLab"]
+    subgraph DEC["② &nbsp; CLAIM DECOMPOSITION ENGINE &nbsp; · &nbsp; decomposer.py"]
+        direction LR
+        NORM["<b>Normalizer</b><br/><i>canonical text</i>"]
+        LLM1["<b>Groq · gpt-oss-20b</b><br/><i>LLM decompose</i>"]
+        SUB["<b>Atomic Sub-Claims</b><br/><i>Pydantic v2 schema</i>"]
+        NORM --> LLM1 --> SUB
     end
 
-    subgraph AI["🧠 Model Services"]
-        GROQ["Groq API<br/>gpt-oss-20b / 120b"]
-        BIENC["Bi-Encoder<br/>Embeddings"]
-        CROSS["Cross-Encoder<br/>ms-marco-MiniLM-L-6-v2"]
+    subgraph RET["③ &nbsp; TWO-STAGE RETRIEVAL ENGINE &nbsp; · &nbsp; verifier.py"]
+        direction LR
+        BI["<b>Bi-Encoder</b><br/><i>pgvector · cosine recall</i>"]
+        CR["<b>Cross-Encoder</b><br/><i>ms-marco-MiniLM-L-6-v2</i>"]
+        FB["<b>DuckDuckGo</b><br/><i>live web fallback</i>"]
+        BI --> CR
+        CR -. weak evidence .-> FB
     end
 
-    subgraph DATA["🗄️ Data Tier"]
-        SUPA[("Supabase<br/>pgvector · 1,500+ chunks")]
-        DDG["DuckDuckGo<br/>Live Web Search"]
+    subgraph VER["④ &nbsp; VERDICT & SCORING ENGINE &nbsp; · &nbsp; evidence-grounded reasoning"]
+        direction LR
+        MATCH["<b>Evidence Matcher</b><br/><i>claim ↔ evidence</i>"]
+        LLM2["<b>Groq · gpt-oss-120b</b><br/><i>deep reasoning</i>"]
+        OUT["<b>Structured Verdict</b><br/><i>BENAR · MENYESATKAN · HOAX</i>"]
+        MATCH --> LLM2 --> OUT
     end
 
-    INPUT --> UI --> GATE
-    GATE --> OCR --> DECOMP
-    DECOMP <--> GROQ
-    DECOMP --> VERIFY
-    VERIFY <--> BIENC
-    VERIFY <--> CROSS
-    VERIFY <--> SUPA
-    VERIFY -. fallback .-> DDG
-    VERIFY --> VERDICT <--> GROQ
-    VERDICT --> GATE --> REPORT
-    REPORT --> PDF
+    subgraph API["⑤ &nbsp; FASTAPI SERVICE LAYER"]
+        direction LR
+        E1["<b>/verify</b><br/><i>run pipeline</i>"]
+        E2["<b>/ingest</b><br/><i>OCR · PDF intake</i>"]
+        E3["<b>/report</b><br/><i>ReportLab PDF</i>"]
+    end
 
-    classDef client fill:#0ea5e9,stroke:#0369a1,color:#fff
-    classDef api fill:#8b5cf6,stroke:#6d28d9,color:#fff
-    classDef ai fill:#f55036,stroke:#c2410c,color:#fff
-    classDef data fill:#3ecf8e,stroke:#059669,color:#fff
-    class UI,INPUT,REPORT client
-    class GATE,OCR,DECOMP,VERIFY,VERDICT,PDF api
-    class GROQ,BIENC,CROSS ai
-    class SUPA,DDG data
+    subgraph FE["⑥ &nbsp; NEXT.JS COMMAND CENTER &nbsp; · &nbsp; Cyber-Tech Dark Theme"]
+        direction LR
+        UI["<b>Multimodal Input</b><br/><i>text · image · PDF</i>"]
+        RES["<b>Verdict Render</b><br/><i>tactics · tips · citations</i>"]
+        EXP["<b>PDF Export</b><br/><i>investigation report</i>"]
+    end
+
+    KB[("<b>Supabase · pgvector</b><br/><i>1,500+ TurnBackHoax chunks</i>")]
+
+    ING --> DEC --> RET --> VER --> API --> FE
+    KB -. embeddings .-> RET
+
+    classDef ingest fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+    classDef decomp fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    classDef retr   fill:#cffafe,stroke:#0891b2,color:#164e63
+    classDef verd   fill:#ffedd5,stroke:#ea580c,color:#7c2d12
+    classDef apie   fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef front  fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef store  fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    class T,I,P ingest
+    class NORM,LLM1,SUB decomp
+    class BI,CR,FB retr
+    class MATCH,LLM2,OUT verd
+    class E1,E2,E3 apie
+    class UI,RES,EXP front
+    class KB store
 ```
 
 ---
@@ -178,36 +197,29 @@ graph TB
 The core of VeriClaim AI is a **5-stage verification pipeline**. A single user submission flows through multimodal normalization, atomic decomposition, two-stage retrieval, evidence-grounded reasoning, and structured reporting.
 
 ```mermaid
-flowchart TD
-    START([User Submission]) --> TYPE{Input Type?}
+flowchart LR
+    IN([Input]) --> S1["<b>Stage 1</b><br/>Ingest<br/><i>OCR · PyPDF</i>"]
+    S1 --> S2["<b>Stage 2</b><br/>Decompose<br/><i>→ sub-claims</i>"]
+    S2 --> S3["<b>Stage 3</b><br/>Retrieve<br/><i>Bi → Cross</i>"]
+    S3 --> CHK{Strong<br/>evidence?}
+    CHK -->|yes| S4["<b>Stage 4</b><br/>Verdict<br/><i>score · tactics</i>"]
+    CHK -->|no| WEB["<b>DuckDuckGo</b><br/><i>live fallback</i>"]
+    WEB --> S4
+    S4 --> S5["<b>Stage 5</b><br/>Report<br/><i>UI · PDF</i>"]
+    S5 --> OUT([Report])
 
-    TYPE -->|Raw Text| NORM[Normalized Claim Text]
-    TYPE -->|Screenshot| OCR["🖼️ EasyOCR Extraction"] --> NORM
-    TYPE -->|PDF| PYPDF["📄 PyPDF Extraction"] --> NORM
-
-    NORM --> DECOMP["🧩 STAGE 2 — Claim Decomposition<br/>decomposer.py · Pydantic structured output"]
-    DECOMP --> SUBCLAIMS["Atomic Sub-Claims<br/>[claim_1, claim_2, ... claim_n]"]
-
-    SUBCLAIMS --> S1["🔍 STAGE 3A — Bi-Encoder Retrieval<br/>Cosine similarity vs pgvector<br/>(1,500+ TurnBackHoax chunks)"]
-    S1 --> S2["🎯 STAGE 3B — Cross-Encoder Rerank<br/>ms-marco-MiniLM-L-6-v2<br/>precise relevance scoring"]
-
-    S2 --> ENOUGH{Strong<br/>evidence?}
-    ENOUGH -->|Yes| EVID[High-Signal Evidence Set]
-    ENOUGH -->|No / Novel claim| FALLBACK["🌐 Live Web Fallback<br/>DuckDuckGo Search"] --> EVID
-
-    EVID --> ENGINE["⚖️ STAGE 4 — Verdict Engine<br/>Evidence ↔ Sub-claim matching<br/>Groq gpt-oss-120b reasoning"]
-
-    ENGINE --> OUT["📊 Structured Verdict<br/>• Verdict: BENAR / MENYESATKAN / HOAX<br/>• Confidence score<br/>• Manipulation tactics<br/>• Literacy tips<br/>• Source citations"]
-
-    OUT --> RENDER["🖥️ STAGE 5 — Next.js Render"]
-    RENDER --> EXPORT["📄 ReportLab PDF Export"]
-    EXPORT --> END([Investigation Report])
-
-    style DECOMP fill:#8b5cf6,color:#fff
-    style S1 fill:#0ea5e9,color:#fff
-    style S2 fill:#0369a1,color:#fff
-    style ENGINE fill:#f55036,color:#fff
-    style OUT fill:#3ecf8e,color:#fff
+    classDef s1 fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+    classDef s2 fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    classDef s3 fill:#cffafe,stroke:#0891b2,color:#164e63
+    classDef s4 fill:#ffedd5,stroke:#ea580c,color:#7c2d12
+    classDef s5 fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef fb fill:#fef9c3,stroke:#ca8a04,color:#713f12
+    class S1 s1
+    class S2 s2
+    class S3 s3
+    class S4 s4
+    class S5 s5
+    class WEB fb
 ```
 
 ### Stage Details
