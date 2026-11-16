@@ -60,6 +60,16 @@ The platform is designed for a dual audience:
 
 ---
 
+## 🖥️ Live Preview
+
+<div align="center">
+  <img src="preview.png" alt="VeriClaim AI — Dashboard" width="900"/>
+  <br/>
+  <em>Real-time multimodal hoax detection — paste news text / WhatsApp broadcast, or upload a screenshot or PDF.</em>
+</div>
+
+---
+
 ## ✨ Key Capabilities
 
 | Capability | Description |
@@ -125,7 +135,7 @@ VeriClaim AI follows a **decoupled three-tier architecture** — a presentation 
   <img src="arch_diagram.png" alt="VeriClaim AI — System Architecture" width="920"/>
 </div>
 
-> 📐 Diagram source is editable in [draw.io / diagrams.net](https://app.diagrams.net) — open `docs/vericlaim-architecture.drawio` to modify layers or re-export the PNG.
+> 📐 Diagram source is editable in [draw.io / diagrams.net](https://app.diagrams.net) — open `vericlaim-architecture.drawio` to modify layers or re-export the PNG.
 
 ---
 
